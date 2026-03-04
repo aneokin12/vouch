@@ -24,8 +24,11 @@ func InjectAndRun(v vault.Vault, cmdArgs []string) error {
 
 	// 2. Prepare the environment
 	env := os.Environ()
-	for key, val := range v {
-		env = append(env, fmt.Sprintf("%s=%s", key, val))
+	for key, secret := range v {
+		// Do not inject deleted secrets
+		if !secret.Deleted {
+			env = append(env, fmt.Sprintf("%s=%s", key, secret.Value))
+		}
 	}
 
 	// 3. Syscall Exec replacement

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/aneokin12/vouch/internal/vault"
 	"github.com/spf13/cobra"
@@ -41,7 +42,12 @@ var setCmd = &cobra.Command{
 			}
 		}
 
-		v[key] = value
+		// Store as a Secret CRDT including the updated timestamp
+		v[key] = vault.Secret{
+			Value:     value,
+			UpdatedAt: time.Now().Unix(),
+			Deleted:   false,
+		}
 
 		if err := vault.SaveVault(v, password, vaultPath); err != nil {
 			fmt.Println("Error saving vault:", err)

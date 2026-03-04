@@ -68,9 +68,13 @@ func (m *ListModel) View() string {
 		b.WriteString("No secrets found in the vault.\n")
 	} else {
 		for _, k := range m.keys {
-			val := m.vault[k]
-			masked := maskValue(val)
-			b.WriteString(fmt.Sprintf("%s: %s\n", keyStyle.Render(k), valStyle.Render(masked)))
+			secret := m.vault[k]
+
+			// Do not print tombstones
+			if !secret.Deleted {
+				masked := maskValue(secret.Value)
+				b.WriteString(fmt.Sprintf("%s: %s\n", keyStyle.Render(k), valStyle.Render(masked)))
+			}
 		}
 	}
 

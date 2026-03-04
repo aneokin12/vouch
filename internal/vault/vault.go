@@ -13,8 +13,15 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
-// Vault represents the stored secrets
-type Vault map[string]string
+// Secret represents a single key-value entry with CRDT LWW metadata
+type Secret struct {
+	Value     string `json:"value"`
+	UpdatedAt int64  `json:"updatedAt"`
+	Deleted   bool   `json:"deleted"`
+}
+
+// Vault represents the stored map of Secrets
+type Vault map[string]Secret
 
 var (
 	ErrIncorrectPassword = errors.New("incorrect password or corrupted vault")
