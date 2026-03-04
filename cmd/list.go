@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/aneokin12/vouch/internal/tui"
-	"github.com/aneokin12/vouch/internal/vault"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )
@@ -26,19 +26,26 @@ var listCmd = &cobra.Command{
 			fmt.Println("Error getting home directory:", err)
 			os.Exit(1)
 		}
-		vaultPath := filepath.Join(home, ".vouch", "vault.enc")
-
-		v, err := vault.LoadVault(password, vaultPath)
-		if err != nil {
-			if err == vault.ErrVaultNotFound {
-				fmt.Println("Vault is empty. Use `vouch set` to add secrets.")
-				os.Exit(0)
-			}
-			fmt.Println("Error loading vault:", err)
+		vouchDir := filepath.Join(home, ".vouch")
+		entries, err := os.ReadDir(vouchDir)
+		if err != nil && !os.IsNotExist(err) {
+			fmt.Println("Error reading vouch directory:", err)
 			os.Exit(1)
 		}
 
-		p := tea.NewProgram(tui.NewListModel(v))
+		var namespaces []string
+		for _, e := range entries {
+			if !e.IsDir() && filepath.Ext(e.Name()) == ".enc" {
+				namespaces = append(namespaces, strings.TrimSuffix(e.Name(), ".enc"))
+			}
+		}
+
+		if len(namespaces) == 0 {
+			fmt.Println("No Vaults found. Use `vouch set` to create your first secret.")
+			os.Exit(0)
+		}
+
+		p := tea.NewProgram(tui.NewListModel(namespaces, password, vouchDir))
 		if _, err := p.Run(); err != nil {
 			fmt.Println("Error running TUI:", err)
 			os.Exit(1)
