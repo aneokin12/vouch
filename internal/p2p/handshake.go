@@ -42,18 +42,18 @@ func NewClientPake(magicCode string) (*pake.Pake, error) {
 	return pake.InitCurve([]byte(magicCode), 1, "ed25519") // 1 for client
 }
 
-// RunHandshake exchanges the PAKE payloads over the stream and derives the symmetric session key
-func RunHandshake(stream network.Stream, pk *pake.Pake) ([]byte, error) {
-	// 1. Send our public material
+// RunHandshakeHost executes the Host role (Role 0) of the SPAKE2 exchange
+func RunHandshakeHost(stream network.Stream, pk *pake.Pake) ([]byte, error) {
+	// 1. Send our initial public material
 	myBytes := pk.Bytes()
 	if err := writeMsg(stream, myBytes); err != nil {
-		return nil, fmt.Errorf("failed to send PAKE payload: %w", err)
+		return nil, fmt.Errorf("failed to send Host PAKE payload: %w", err)
 	}
 
-	// 2. Read peer's public material
+	// 2. Read Client's response
 	peerBytes, err := readMsg(stream)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read peer PAKE payload: %w", err)
+		return nil, fmt.Errorf("failed to read Client PAKE payload: %w", err)
 	}
 
 	// 3. Update the PAKE state machine
@@ -66,7 +66,33 @@ func RunHandshake(stream network.Stream, pk *pake.Pake) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract session key: %w", err)
 	}
+	return sessionKey, nil
+}
 
+// RunHandshakeClient executes the Client role (Role 1) of the SPAKE2 exchange
+func RunHandshakeClient(stream network.Stream, pk *pake.Pake) ([]byte, error) {
+	// 1. Read Host's initial public material
+	peerBytes, err := readMsg(stream)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read Host PAKE payload: %w", err)
+	}
+
+	// 2. Update the Client PAKE state machine with Host's material
+	if err := pk.Update(peerBytes); err != nil {
+		return nil, fmt.Errorf("failed PAKE update (possible wrong magic code): %w", err)
+	}
+
+	// 3. Send our Client public material back
+	myBytes := pk.Bytes()
+	if err := writeMsg(stream, myBytes); err != nil {
+		return nil, fmt.Errorf("failed to send Client PAKE payload: %w", err)
+	}
+
+	// 4. Extract the shared session key
+	sessionKey, err := pk.SessionKey()
+	if err != nil {
+		return nil, fmt.Errorf("failed to extract session key: %w", err)
+	}
 	return sessionKey, nil
 }
 

@@ -93,7 +93,7 @@ var joinCmd = &cobra.Command{
 				}
 
 				// Run Handshake over stream
-				sessionKey, err := p2p.RunHandshake(s, pk)
+				sessionKey, err := p2p.RunHandshakeClient(s, pk)
 				if err != nil {
 					fmt.Println("Handshake failed:", err)
 					s.Reset()
