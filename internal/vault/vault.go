@@ -124,3 +124,33 @@ func LoadVault(password string, path string) (Vault, error) {
 
 	return v, nil
 }
+
+// MergeVaults deterministically merges a remote vault into a local vault using CRDT LWW rules
+func MergeVaults(local, remote Vault) Vault {
+	merged := make(Vault)
+
+	// Start with everything in local
+	for k, v := range local {
+		merged[k] = v
+	}
+
+	// Apply remote updates
+	for k, rv := range remote {
+		if lv, exists := merged[k]; exists {
+			// CRDT LWW logic
+			if rv.UpdatedAt > lv.UpdatedAt {
+				merged[k] = rv
+			} else if rv.UpdatedAt == lv.UpdatedAt {
+				// Deterministic tie-breaker (e.g. string comparison value)
+				if rv.Value > lv.Value {
+					merged[k] = rv
+				}
+			}
+		} else {
+			// New key from remote
+			merged[k] = rv
+		}
+	}
+
+	return merged
+}

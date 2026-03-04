@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/aneokin12/vouch/internal/p2p"
+	"github.com/aneokin12/vouch/internal/vault"
 	"github.com/spf13/cobra"
 )
 
@@ -17,9 +19,33 @@ var joinCmd = &cobra.Command{
 		magicCode := args[0]
 		ctx := context.Background()
 
-		fmt.Println("Starting Vouch Client...")
+		password := os.Getenv("VOUCH_PASSWORD")
+		if password == "" {
+			fmt.Println("Error: VOUCH_PASSWORD environment variable is not set")
+			os.Exit(1)
+		}
 
-		// 1. Create LibP2P Host
+		home, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Println("Error getting home directory:", err)
+			os.Exit(1)
+		}
+		vaultPath := filepath.Join(home, ".vouch", namespace+".enc")
+
+		// 1. Load Local Vault
+		localVault, err := vault.LoadVault(password, vaultPath)
+		if err != nil {
+			if err == vault.ErrVaultNotFound {
+				localVault = make(vault.Vault)
+			} else {
+				fmt.Println("Error loading local vault:", err)
+				os.Exit(1)
+			}
+		}
+
+		fmt.Printf("Starting Vouch Client for namespace: '%s'...\n", namespace)
+
+		// 2. Create LibP2P Host
 		h, err := p2p.NewNode(ctx)
 		if err != nil {
 			fmt.Println("Error starting P2P host:", err)
@@ -74,9 +100,34 @@ var joinCmd = &cobra.Command{
 					continue
 				}
 
-				fmt.Printf("Handshake successful! Derived Session Key: %x\n", sessionKey)
-				// TODO: Receive Encrypted Vault payload from stream
-				fmt.Println("Closing stream (Data transfer not yet implemented)")
+				fmt.Println("Handshake successful! Exchanging Vaults...")
+
+				// Receive Remote Vault first (Host transfers first)
+				remoteVault, err := p2p.ReceiveVault(s, sessionKey)
+				if err != nil {
+					fmt.Println("Failed to receive remote vault payload:", err)
+					s.Reset()
+					continue
+				}
+
+				// Transfer Local Vault
+				if err := p2p.TransferVault(s, sessionKey, localVault); err != nil {
+					fmt.Println("Failed to send vault payload:", err)
+					s.Reset()
+					continue
+				}
+
+				fmt.Println("Vault exchanged successfully. Merging CRDTs...")
+				// Merge Vaults deterministically
+				mergedVault := vault.MergeVaults(localVault, remoteVault)
+
+				// Save to disk
+				if err := vault.SaveVault(mergedVault, password, vaultPath); err != nil {
+					fmt.Println("Error saving merged vault to disk:", err)
+					continue
+				}
+
+				fmt.Printf("Sync complete! %d secrets combined.\n", len(mergedVault))
 
 				s.Close()
 				return
