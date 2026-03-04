@@ -13,6 +13,12 @@ var rootCmd = &cobra.Command{
 	Long:  `Vouch safely injects secrets into your processes and securely syncs them with your peers.`,
 }
 
+var namespace string
+
+func init() {
+	rootCmd.PersistentFlags().StringVarP(&namespace, "env", "e", "personal", "Namespace (environment) to load secrets from")
+}
+
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

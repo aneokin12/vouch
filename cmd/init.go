@@ -26,7 +26,7 @@ var initCmd = &cobra.Command{
 			fmt.Println("Error getting home directory:", err)
 			os.Exit(1)
 		}
-		vaultPath := filepath.Join(home, ".vouch", "vault.enc")
+		vaultPath := filepath.Join(home, ".vouch", namespace+".enc")
 
 		v, err := vault.LoadVault(password, vaultPath)
 		if err != nil {
