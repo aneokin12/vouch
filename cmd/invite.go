@@ -2,21 +2,35 @@ package cmd
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"os"
 
 	"github.com/aneokin12/vouch/internal/p2p"
+	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/spf13/cobra"
 )
+
+const protocolID = "/vouch/sync/1.0.0"
 
 var inviteCmd = &cobra.Command{
 	Use:   "invite",
 	Short: "Host a secure P2P session to share a namespace",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
-		fmt.Printf("Starting Vouch Host for namespace: %s...\n", namespace)
 
-		// 1. Create LibP2P Host
+		// 1. Generate Magic Code
+		magicCode, err := p2p.GenerateMagicCode()
+		if err != nil {
+			fmt.Println("Error generating magic code:", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("Starting Vouch Host for namespace: '%s'...\n\n", namespace)
+		fmt.Printf("Magic Code: %s\n\n", magicCode)
+		fmt.Println("Tell the receiver to run: `vouch join " + magicCode + "`")
+
+		// 2. Create LibP2P Host
 		h, err := p2p.NewNode(ctx)
 		if err != nil {
 			fmt.Println("Error starting P2P host:", err)
@@ -24,23 +38,45 @@ var inviteCmd = &cobra.Command{
 		}
 		defer h.Close()
 
-		fmt.Printf("Listening on local network with PeerID: %s\n", h.ID().String())
+		// 3. Set up the Stream Handler for incoming sync requests
+		h.SetStreamHandler(protocolID, func(s network.Stream) {
+			defer s.Close()
+			fmt.Println("\nIncoming connection! Starting SPAKE2 Handshake...")
 
-		// 2. Start mDNS Discovery
+			// Initialize Host PAKE State
+			pk, err := p2p.NewHostPake(magicCode)
+			if err != nil {
+				fmt.Println("Handshake initialization failed:", err)
+				return
+			}
+
+			// Run Handshake over stream
+			sessionKey, err := p2p.RunHandshake(s, pk)
+			if err != nil {
+				fmt.Println("Handshake failed:", err)
+				s.Reset()
+				return
+			}
+
+			fmt.Printf("Handshake successful! Derived Session Key: %s\n", hex.EncodeToString(sessionKey))
+			// TODO: Encrypt Vault with Session Key and Send over stream
+			fmt.Println("Closing stream (Data transfer not yet implemented)")
+		})
+
+		// 4. Start mDNS Discovery
 		peerChan, err := p2p.StartMDNSDiscovery(ctx, h)
 		if err != nil {
 			fmt.Println("Error starting mDNS discovery:", err)
 			os.Exit(1)
 		}
 
-		fmt.Println("Waiting for peers to join...")
+		fmt.Println("\nWaiting for peers to discover us on the local network...")
 
-		// 3. Listen for discovered peers
+		// 5. Listen for discovered peers
 		for {
 			select {
 			case pi := <-peerChan:
-				fmt.Printf("Found local peer: %s\n", pi.ID.String())
-				// Next Step: Handshake Negotiation
+				fmt.Printf("Discovered peer on network: %s (Waiting for connection...)\n", pi.ID.String())
 			case <-ctx.Done():
 				return
 			}

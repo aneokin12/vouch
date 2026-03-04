@@ -43,6 +43,43 @@ var joinCmd = &cobra.Command{
 				fmt.Printf("Found local Host peer: %s\n", pi.ID.String())
 
 				// Next Step: Actually connect and perform SPAKE2 handshake using the magicCode
+				err = h.Connect(ctx, pi)
+				if err != nil {
+					fmt.Printf("Failed to connect to host: %v\n", err)
+					continue
+				}
+
+				// Open a stream to the vault sync protocol
+				s, err := h.NewStream(ctx, pi.ID, protocolID)
+				if err != nil {
+					fmt.Printf("Failed to open stream to host: %v\n", err)
+					continue
+				}
+
+				fmt.Println("Stream established! Starting SPAKE2 Handshake...")
+
+				// Initialize Client PAKE State
+				pk, err := p2p.NewClientPake(magicCode)
+				if err != nil {
+					fmt.Println("Handshake initialization failed:", err)
+					s.Reset()
+					continue
+				}
+
+				// Run Handshake over stream
+				sessionKey, err := p2p.RunHandshake(s, pk)
+				if err != nil {
+					fmt.Println("Handshake failed:", err)
+					s.Reset()
+					continue
+				}
+
+				fmt.Printf("Handshake successful! Derived Session Key: %x\n", sessionKey)
+				// TODO: Receive Encrypted Vault payload from stream
+				fmt.Println("Closing stream (Data transfer not yet implemented)")
+
+				s.Close()
+				return
 
 			case <-ctx.Done():
 				return
