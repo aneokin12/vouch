@@ -10,13 +10,24 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var rmAll bool
+
 var rmCmd = &cobra.Command{
 	Use:   "rm [key]",
-	Short: "Remove a secret from the vault",
-	Args:  cobra.ExactArgs(1),
+	Short: "Remove a secret or an entire namespace from the vault",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if rmAll {
+			if len(args) != 0 {
+				return fmt.Errorf("accepts no arguments when --all is used")
+			}
+			return nil
+		}
+		if len(args) != 1 {
+			return fmt.Errorf("accepts 1 arg(s), received %d", len(args))
+		}
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
-		key := args[0]
-
 		password := os.Getenv("VOUCH_PASSWORD")
 		if password == "" {
 			fmt.Println("Error: VOUCH_PASSWORD environment variable is not set")
@@ -29,6 +40,22 @@ var rmCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		vaultPath := filepath.Join(home, ".vouch", namespace+".enc")
+
+		if rmAll {
+			err := os.Remove(vaultPath)
+			if err != nil {
+				if os.IsNotExist(err) {
+					fmt.Printf("Namespace '%s' does not exist.\n", namespace)
+					os.Exit(0)
+				}
+				fmt.Println("Error deleting namespace:", err)
+				os.Exit(1)
+			}
+			fmt.Printf("Namespace '%s' successfully deleted.\n", namespace)
+			return
+		}
+
+		key := args[0]
 
 		v, err := vault.LoadVault(password, vaultPath)
 		if err != nil {
@@ -55,5 +82,6 @@ var rmCmd = &cobra.Command{
 }
 
 func init() {
+	rmCmd.Flags().BoolVarP(&rmAll, "all", "a", false, "Delete the entire namespace vault file")
 	rootCmd.AddCommand(rmCmd)
 }
