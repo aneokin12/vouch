@@ -15,11 +15,7 @@ var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List stored secrets securely using a TUI dashboard",
 	Run: func(cmd *cobra.Command, args []string) {
-		password := os.Getenv("VOUCH_PASSWORD")
-		if password == "" {
-			fmt.Println("Error: VOUCH_PASSWORD environment variable is not set")
-			os.Exit(1)
-		}
+		password := getPassword()
 
 		home, err := os.UserHomeDir()
 		if err != nil {

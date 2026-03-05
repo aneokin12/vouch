@@ -7,10 +7,22 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const vouchArt = `⠀⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣾⠀
+⠀⣿⣿⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⣿⣿⠀
+⠀⣿⣿⣿⣿⣷⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⣿⣿⣿⣿⠀
+⠀⣿⣿⣿⣿⡟⢀⣾⣿⣷⡖⠒⣀⣀⣤⣶⣾⣿⣷⣶⣤⣤⣴⣾⣆⠘⣿⣿⣿⠀    ⠰⣶⡔⠀⠀⠀⣶⠐⠀⣠⡴⠒⠒⢦⣄⠀⠐⢲⡶⠂⠀⠀⢲⠂⠀⢀⣤⠖⠒⠒⢤⡄⠂⣶⡖⠀⠀⠐⣶⡖⠀
+⠀⣿⣿⣿⡿⠁⣾⣿⣿⣿⣧⣀⠙⠛⠛⠛⠋⣈⠻⢿⣿⣿⣿⣿⣿⣧⠈⢿⣿⠀    ⠀⢻⣿⠀⠀⢠⠃⠀⢰⡿⠀⠀⠀⠀⢻⣇⠀⢸⣇⠀⠀⠀⢸⠀⢠⣿⡏⠀⠀⠀⠈⠃⠀⣿⡇⠀⠀⠀⣿⡇⠀
+⠀⣿⣿⣿⠁⣼⣿⠟⠻⠿⣿⣿⣿⣷⣶⣾⣿⠿⣷⣄⡉⠻⣿⣿⣿⣿⣧⠈⢿⠀    ⠀⠀⢻⣧⠀⡞⠀⠀⢸⣇⠀⠀⠀⠀⢸⡿⠀⢸⣇⠀⠀⠀⢸⠀⢘⣿⡄⠀⠀⠀⠀⠀⠀⣿⡍⠙⠉⠉⣿⡇⠀
+⠀⠛⠛⠃⠀⠻⠋⣠⣶⠄⠙⠛⢻⣿⣿⣿⣷⣦⣈⠛⢿⣦⣄⠙⠻⠛⠁⠀⠀⠀    ⠀⠀⠀⢿⡾⠀⠀⠀⠈⢿⣄⠀⠀⣠⡿⠃⠀⠸⣷⡀⠀⢀⡼⠀⠀⠻⣷⣀⠀⢀⣠⠀⠀⣿⡇⠀⠀⠀⣿⡇⠀
+⠀⠀⠀⠀⠀⢠⣾⠟⠁⣠⣿⠇⠈⠛⣿⣿⣈⠙⠿⣷⣦⡈⠛⠛⠀⠀⠀⠀⠀⠀    ⠀⠀⠀⠈⠁⠀⠀⠀⠀⠀⠈⠉⠉⠁⠀⠀⠀⠀⠀⠉⠉⠉⠀⠀⠀⠀⠀⠉⠉⠉⠀⠀⠉⠉⠉⠀⠀⠈⠉⠉⠁
+⠀⠀⠀⠀⠀⠀⠁⢠⣾⡿⠁⣠⣾⠆⠸⠉⠻⣷⣤⡈⠙⠿⠃⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠉⠀⣾⠟⢁⣴⡶⠀⣤⡀⠙⠟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠰⣿⠟⠁⠀⠛⠟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀`
+
 var rootCmd = &cobra.Command{
 	Use:   "vouch",
 	Short: "Vouch is a zero-trust P2P secret orchestrator",
-	Long:  `Vouch safely injects secrets into your processes and securely syncs them with your peers.`,
+	Long:  "\033[90m" + vouchArt + "\033[0m\n\nVouch safely injects secrets into your processes and securely syncs them with your peers.",
 }
 
 var namespace string

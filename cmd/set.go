@@ -18,11 +18,7 @@ var setCmd = &cobra.Command{
 		key := args[0]
 		value := args[1]
 
-		password := os.Getenv("VOUCH_PASSWORD")
-		if password == "" {
-			fmt.Println("Error: VOUCH_PASSWORD environment variable is not set")
-			os.Exit(1)
-		}
+		password := getPassword()
 
 		home, err := os.UserHomeDir()
 		if err != nil {

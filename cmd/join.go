@@ -24,11 +24,7 @@ var joinCmd = &cobra.Command{
 		magicCode := args[0]
 		ctx := context.Background()
 
-		password := os.Getenv("VOUCH_PASSWORD")
-		if password == "" {
-			fmt.Println("Error: VOUCH_PASSWORD environment variable is not set")
-			os.Exit(1)
-		}
+		password := getPassword()
 
 		home, err := os.UserHomeDir()
 		if err != nil {
