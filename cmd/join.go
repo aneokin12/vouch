@@ -56,7 +56,7 @@ var joinCmd = &cobra.Command{
 		fmt.Printf("Searching local network for Host using Magic Code: %s\n", magicCode)
 
 		// 2. Start mDNS Discovery
-		peerChan, err := p2p.StartMDNSDiscovery(ctx, h)
+		peerChan, err := p2p.StartMDNSDiscovery(ctx, h, magicCode)
 		if err != nil {
 			fmt.Println("Error starting mDNS discovery:", err)
 			os.Exit(1)

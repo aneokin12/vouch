@@ -114,7 +114,7 @@ var inviteCmd = &cobra.Command{
 		})
 
 		// 5. Start mDNS Discovery
-		peerChan, err := p2p.StartMDNSDiscovery(ctx, h)
+		peerChan, err := p2p.StartMDNSDiscovery(ctx, h, magicCode)
 		if err != nil {
 			fmt.Println("Error starting mDNS discovery:", err)
 			os.Exit(1)

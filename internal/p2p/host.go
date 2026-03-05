@@ -10,8 +10,6 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/discovery/mdns"
 )
 
-const discoveryRendezvous = "vouch-sync"
-
 // discoveryNotifee gets notified when we find a new peer via mDNS
 type discoveryNotifee struct {
 	Peerchan chan peer.AddrInfo
@@ -35,14 +33,16 @@ func NewNode(ctx context.Context) (host.Host, error) {
 	return h, nil
 }
 
-// StartMDNSDiscovery starts the mDNS discovery service on the Host and returns a channel of found peers
-func StartMDNSDiscovery(ctx context.Context, h host.Host) (<-chan peer.AddrInfo, error) {
+// StartMDNSDiscovery starts the mDNS discovery service on the Host using a unique rendezvous string based on the magic code
+func StartMDNSDiscovery(ctx context.Context, h host.Host, magicCode string) (<-chan peer.AddrInfo, error) {
 	// Create a channel for peer discovery notifications
 	peerChan := make(chan peer.AddrInfo)
 	notifee := &discoveryNotifee{Peerchan: peerChan}
 
 	// Setting up the mDNS service to broadcast our presence and listen for others
-	ser := mdns.NewMdnsService(h, discoveryRendezvous, notifee)
+	// We append the magicCode to ensure we only discover the specific host we want
+	rendezvous := "vouch-sync-" + magicCode
+	ser := mdns.NewMdnsService(h, rendezvous, notifee)
 
 	if err := ser.Start(); err != nil {
 		return nil, fmt.Errorf("failed to start mDNS service: %w", err)
