@@ -63,6 +63,14 @@ var inviteCmd = &cobra.Command{
 		}
 		defer h.Close()
 
+		fmt.Println("\n--- Direct Connection Fallback ---")
+		fmt.Println("If mDNS is blocked by your network (e.g., enterprise/school Wi-Fi),")
+		fmt.Println("have the receiver use the --peer flag with one of these addresses:")
+		for _, addr := range h.Addrs() {
+			fmt.Printf("  vouch join %s --peer %s/p2p/%s\n", magicCode, addr.String(), h.ID().String())
+		}
+		fmt.Println("----------------------------------")
+
 		// 4. Set up the Stream Handler for incoming sync requests
 		h.SetStreamHandler(protocolID, func(s network.Stream) {
 			defer s.Close()
