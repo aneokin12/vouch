@@ -1,6 +1,6 @@
 {
     "name": "@aneokin12/vouch",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Cross-platform CLI tool to securely generate, store, and share end-to-end encrypted passwords and secrets using peer-to-peer networking",
     "bin": {
         "vouch": "npm/run.js"
