@@ -1,10 +1,17 @@
 {
     "name": "@aneokin12/vouch",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "Cross-platform CLI tool to securely generate, store, and share end-to-end encrypted passwords and secrets using peer-to-peer networking",
     "bin": {
         "vouch": "npm/run.js"
     },
+    "files": [
+        "README.md",
+        "VOUCH.txt",
+        "_vouch",
+        "npm/install.js",
+        "npm/run.js"
+    ],
     "scripts": {
         "postinstall": "node npm/install.js"
     },
@@ -13,8 +20,7 @@
         "url": "git+https://github.com/aneokin12/vouch.git"
     },
     "publishConfig": {
-        "access": "public",
-        "registry": "https://registry.npmjs.org/"
+        "access": "public"
     },
     "keywords": [
         "cli",

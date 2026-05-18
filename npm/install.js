@@ -34,12 +34,6 @@ if (!fs.existsSync(binDir)) fs.mkdirSync(binDir, { recursive: true });
 const binName = goos === 'windows' ? 'vouch.exe' : 'vouch';
 const binPath = path.join(binDir, binName);
 
-// Skip if already downloaded
-if (fs.existsSync(binPath)) {
-    console.log('Binary already exists, skipping download.');
-    process.exit(0);
-}
-
 console.log(`Downloading Vouch v${version} for ${goos}-${goarch}...`);
 
 function download(url, dest) {

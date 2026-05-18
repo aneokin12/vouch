@@ -48,24 +48,33 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          registry-url: 'https://registry.npmjs.org/'
 
       - name: Sync version
         run: |
           VERSION=${GITHUB_REF_NAME#v}
-          npm version $VERSION --no-git-tag-version
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          if [ "$CURRENT_VERSION" != "$VERSION" ]; then
+            npm version "$VERSION" --no-git-tag-version
+          else
+            echo "package.json already at $VERSION"
+          fi
 
       - name: Publish to npmjs
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          npm config set registry https://registry.npmjs.org/
-          npm config set //registry.npmjs.org/:_authToken ${NODE_AUTH_TOKEN}
-          npm publish --access public --ignore-scripts
-      
+          npm publish --access public --ignore-scripts --registry=https://registry.npmjs.org/
+
+      - name: Setup Node for GitHub Packages
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com/'
+          scope: '@aneokin12'
+
       - name: Publish to GitHub Packages
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          npm config set registry https://npm.pkg.github.com/
-          npm config set //npm.pkg.github.com/:_authToken ${NODE_AUTH_TOKEN}
-          npm publish --ignore-scripts
+          npm publish --ignore-scripts --registry=https://npm.pkg.github.com/
